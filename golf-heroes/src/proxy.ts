@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 const SUBSCRIBER_ROUTES = ['/dashboard', '/scores', '/charity', '/draws', '/winners', '/profile']
 const ADMIN_ROUTES = ['/admin']
 
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
