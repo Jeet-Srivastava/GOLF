@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, Variants } from 'framer-motion'
 import { Trophy, Heart, Target, ArrowRight, Shield, Star, Users } from 'lucide-react'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
@@ -9,12 +9,12 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { PRICING, formatCurrency } from '@/types'
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+    transition: { delay: i * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] as const },
   }),
 }
 
