@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 /**
- * POST /api/subscription — Create or renew a subscription (mock payment flow)
+ * POST /api/subscription — Create or activate a free subscription
  */
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -19,7 +19,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
   }
 
-  const priceCents = plan === 'monthly' ? 999 : 8999
+  // Free subscription - no payment required
+  const priceCents = 0
   const now = new Date()
   const periodEnd = new Date(now)
   if (plan === 'monthly') {
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
     .single()
 
   if (existing) {
-    // Renew
+    // Renew/upgrade existing subscription
     const { data, error } = await supabase
       .from('subscriptions')
       .update({
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     return NextResponse.json(data)
   }
 
-  // Create new
+  // Create new free subscription
   const { data, error } = await supabase
     .from('subscriptions')
     .insert({

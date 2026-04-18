@@ -81,6 +81,7 @@ export type Database = {
           short_description: string
           image_url: string | null
           website_url: string | null
+          upcoming_events: string | null
           is_featured: boolean
           total_received_cents: number
           created_at: string
@@ -94,6 +95,7 @@ export type Database = {
           short_description?: string
           image_url?: string | null
           website_url?: string | null
+          upcoming_events?: string | null
           is_featured?: boolean
         }
         Update: {
@@ -103,6 +105,7 @@ export type Database = {
           short_description?: string
           image_url?: string | null
           website_url?: string | null
+          upcoming_events?: string | null
           is_featured?: boolean
           total_received_cents?: number
         }

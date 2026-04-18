@@ -1,9 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
 'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Search, Heart, ArrowRight, ExternalLink } from 'lucide-react'
+import { Search, Heart, ArrowRight, Calendar } from 'lucide-react'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { Input } from '@/components/ui/input'
@@ -16,10 +17,15 @@ interface Charity {
   slug: string
   description: string
   short_description: string
+  upcoming_events: string | null
   image_url: string | null
   website_url: string | null
   is_featured: boolean
   total_received_cents: number
+}
+
+function parseUpcomingEvents(value: string | null) {
+  return value?.split('\n').map((event) => event.trim()).filter(Boolean) || []
 }
 
 export default function CharitiesPage() {
@@ -43,7 +49,8 @@ export default function CharitiesPage() {
   const filtered = charities.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.description.toLowerCase().includes(search.toLowerCase())
+      c.description.toLowerCase().includes(search.toLowerCase()) ||
+      (c.upcoming_events || '').toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -86,7 +93,10 @@ export default function CharitiesPage() {
             </div>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((charity, i) => (
+              {filtered.map((charity, i) => {
+                const upcomingEvents = parseUpcomingEvents(charity.upcoming_events)
+
+                return (
                 <motion.div
                   key={charity.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -114,6 +124,12 @@ export default function CharitiesPage() {
                   <div className="p-6">
                     <h3 className="text-lg font-semibold text-white mb-2">{charity.name}</h3>
                     <p className="text-sm text-gray-400 leading-relaxed mb-4">{charity.short_description}</p>
+                    {upcomingEvents.length > 0 && (
+                      <div className="mb-4 flex items-center gap-2 text-xs text-cyan-400">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {upcomingEvents[0]}
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs text-gray-500">
@@ -129,7 +145,8 @@ export default function CharitiesPage() {
                     </div>
                   </div>
                 </motion.div>
-              ))}
+                )
+              })}
             </div>
           )}
 

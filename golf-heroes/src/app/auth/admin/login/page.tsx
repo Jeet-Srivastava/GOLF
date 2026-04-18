@@ -4,42 +4,29 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Trophy, Mail, Lock, User, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
+import { Shield, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 
-export default function SignupPage() {
+export default function AdminLoginPage() {
   const router = useRouter()
-  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
-      return
-    }
-
     setError('')
-    setSuccess('')
     setLoading(true)
 
     try {
       const supabase = createClient()
-      const { data, error: authError } = await supabase.auth.signUp({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          data: { full_name: fullName },
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-        },
       })
 
       if (authError) {
@@ -47,13 +34,20 @@ export default function SignupPage() {
         return
       }
 
-      if (data.session) {
-        router.push('/dashboard')
-        router.refresh()
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profile?.role !== 'admin') {
+        await supabase.auth.signOut()
+        setError('This account does not have admin access.')
         return
       }
 
-      setSuccess('Your subscriber account is ready. Check your email to confirm your signup.')
+      router.push('/admin')
+      router.refresh()
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
@@ -72,37 +66,26 @@ export default function SignupPage() {
       >
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 shadow-lg shadow-emerald-500/25">
-              <Trophy className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-500/25">
+              <Shield className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-white">
-              Golf<span className="gradient-text">Heroes</span>
-            </span>
+            <span className="text-xl font-bold text-white">Golf Heroes Admin</span>
           </Link>
         </div>
 
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-8 backdrop-blur-xl">
+        <div className="rounded-2xl border border-amber-500/10 bg-white/[0.03] p-8 backdrop-blur-xl">
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold text-white">Create Subscriber Account</h1>
+            <h1 className="text-2xl font-bold text-white">Admin Sign In</h1>
             <p className="mt-2 text-sm text-gray-400">
-              This signup is for players and members. Admin access is provisioned separately.
+              Use the credentials provisioned for your client admin dashboard.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <Input
-              label="Full Name"
-              placeholder="John Smith"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              icon={<User className="h-4 w-4" />}
-              required
-            />
-
-            <Input
-              label="Email"
+              label="Admin Email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="admin@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               icon={<Mail className="h-4 w-4" />}
@@ -113,7 +96,7 @@ export default function SignupPage() {
               <Input
                 label="Password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Min. 6 characters"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 icon={<Lock className="h-4 w-4" />}
@@ -138,33 +121,15 @@ export default function SignupPage() {
               </motion.p>
             )}
 
-            {success && (
-              <motion.p
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-start gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300"
-              >
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{success}</span>
-              </motion.p>
-            )}
-
-            <Button type="submit" fullWidth loading={loading} size="lg">
-              Create Account
+            <Button type="submit" fullWidth loading={loading} size="lg" className="bg-amber-500 text-black hover:bg-amber-400">
+              Access Admin Dashboard
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-500">
-            Already have an account?{' '}
+            Player or member account?{' '}
             <Link href="/auth/login" className="font-medium text-emerald-400 hover:text-emerald-300">
-              Sign in
-            </Link>
-          </p>
-
-          <p className="mt-3 text-center text-sm text-gray-500">
-            Need admin access?{' '}
-            <Link href="/auth/admin/login" className="font-medium text-amber-400 hover:text-amber-300">
-              Go to admin sign in
+              Use member sign in
             </Link>
           </p>
         </div>

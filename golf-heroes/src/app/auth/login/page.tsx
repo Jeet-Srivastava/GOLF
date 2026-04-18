@@ -8,6 +8,7 @@ import { Trophy, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
+import { getHomeRouteForRole } from '@/lib/redirects'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -24,7 +25,7 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -34,7 +35,13 @@ export default function LoginPage() {
         return
       }
 
-      router.push('/dashboard')
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+
+      router.push(getHomeRouteForRole(profile?.role))
       router.refresh()
     } catch {
       setError('Something went wrong. Please try again.')
@@ -68,7 +75,7 @@ export default function LoginPage() {
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl p-8">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
-            <p className="mt-2 text-sm text-gray-400">Sign in to your Golf Heroes account</p>
+            <p className="mt-2 text-sm text-gray-400">Sign in to your Golf Heroes member account</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -120,6 +127,13 @@ export default function LoginPage() {
             Don&apos;t have an account?{' '}
             <Link href="/auth/signup" className="font-medium text-emerald-400 hover:text-emerald-300">
               Sign up
+            </Link>
+          </p>
+
+          <p className="mt-3 text-center text-sm text-gray-500">
+            Admin access?{' '}
+            <Link href="/auth/admin/login" className="font-medium text-amber-400 hover:text-amber-300">
+              Use admin sign in
             </Link>
           </p>
         </div>

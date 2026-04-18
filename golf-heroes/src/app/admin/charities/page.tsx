@@ -1,8 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 'use client'
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Heart, Plus, Edit2, Trash2, Star } from 'lucide-react'
+import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -16,10 +17,15 @@ interface Charity {
   slug: string
   description: string
   short_description: string
+  upcoming_events: string | null
   image_url: string | null
   website_url: string | null
   is_featured: boolean
   total_received_cents: number
+}
+
+function parseUpcomingEvents(value: string | null) {
+  return value?.split('\n').map((event) => event.trim()).filter(Boolean) || []
 }
 
 export default function AdminCharitiesPage() {
@@ -35,6 +41,7 @@ export default function AdminCharitiesPage() {
   const [formSlug, setFormSlug] = useState('')
   const [formDesc, setFormDesc] = useState('')
   const [formShortDesc, setFormShortDesc] = useState('')
+  const [formUpcomingEvents, setFormUpcomingEvents] = useState('')
   const [formImageUrl, setFormImageUrl] = useState('')
   const [formWebsiteUrl, setFormWebsiteUrl] = useState('')
   const [formFeatured, setFormFeatured] = useState(false)
@@ -59,6 +66,7 @@ export default function AdminCharitiesPage() {
     setFormSlug('')
     setFormDesc('')
     setFormShortDesc('')
+    setFormUpcomingEvents('')
     setFormImageUrl('')
     setFormWebsiteUrl('')
     setFormFeatured(false)
@@ -71,6 +79,7 @@ export default function AdminCharitiesPage() {
     setFormSlug(charity.slug)
     setFormDesc(charity.description)
     setFormShortDesc(charity.short_description)
+    setFormUpcomingEvents(charity.upcoming_events || '')
     setFormImageUrl(charity.image_url || '')
     setFormWebsiteUrl(charity.website_url || '')
     setFormFeatured(charity.is_featured)
@@ -87,6 +96,7 @@ export default function AdminCharitiesPage() {
       slug: formSlug || formName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
       description: formDesc,
       short_description: formShortDesc,
+      upcoming_events: formUpcomingEvents || null,
       image_url: formImageUrl || null,
       website_url: formWebsiteUrl || null,
       is_featured: formFeatured,
@@ -120,7 +130,9 @@ export default function AdminCharitiesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Charity Management</h1>
-          <p className="mt-1 text-sm text-gray-500">{charities.length} charities listed</p>
+          <p className="mt-1 text-sm text-gray-500">
+            {loading ? 'Loading charities…' : `${charities.length} charities listed`}
+          </p>
         </div>
         <Button onClick={openAdd}>
           <Plus className="h-4 w-4" /> Add Charity
@@ -129,7 +141,10 @@ export default function AdminCharitiesPage() {
 
       {/* Charities Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {charities.map((charity, i) => (
+        {charities.map((charity, i) => {
+          const upcomingEvents = parseUpcomingEvents(charity.upcoming_events)
+
+          return (
           <motion.div
             key={charity.id}
             initial={{ opacity: 0, y: 10 }}
@@ -150,6 +165,11 @@ export default function AdminCharitiesPage() {
                 </div>
                 {charity.is_featured && <Badge variant="primary">Featured</Badge>}
               </div>
+              {upcomingEvents.length > 0 && (
+                <p className="text-xs text-cyan-400">
+                  {upcomingEvents.length} upcoming event{upcomingEvents.length > 1 ? 's' : ''}
+                </p>
+              )}
               <p className="text-xs text-emerald-400 mt-2">
                 £{(charity.total_received_cents / 100).toLocaleString()} raised
               </p>
@@ -163,7 +183,8 @@ export default function AdminCharitiesPage() {
               </div>
             </div>
           </motion.div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Add/Edit Modal */}
@@ -192,6 +213,13 @@ export default function AdminCharitiesPage() {
             value={formDesc}
             onChange={(e) => setFormDesc(e.target.value)}
             rows={4}
+          />
+          <Textarea
+            label="Upcoming Events"
+            value={formUpcomingEvents}
+            onChange={(e) => setFormUpcomingEvents(e.target.value)}
+            rows={4}
+            placeholder={'One event per line\nCharity Golf Day - 25 May 2026\nSummer Fundraiser - 10 June 2026'}
           />
           <Input
             label="Image URL"

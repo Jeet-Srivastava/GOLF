@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS charities (
   short_description TEXT NOT NULL DEFAULT '',
   image_url TEXT,
   website_url TEXT,
+  upcoming_events TEXT,
   is_featured BOOLEAN NOT NULL DEFAULT false,
   total_received_cents INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

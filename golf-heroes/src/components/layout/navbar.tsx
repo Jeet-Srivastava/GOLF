@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, Trophy, Heart, LogOut, User, LayoutDashboard, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
+import { getHomeRouteForRole } from '@/lib/redirects'
 
 const publicLinks = [
   { href: '/', label: 'Home' },
@@ -19,6 +20,13 @@ const userLinks = [
   { href: '/dashboard/scores', label: 'Scores', icon: Trophy },
   { href: '/dashboard/draws', label: 'Draws', icon: Trophy },
   { href: '/dashboard/charity', label: 'Charity', icon: Heart },
+]
+
+const adminLinks = [
+  { href: '/admin', label: 'Overview', icon: Shield },
+  { href: '/admin/users', label: 'Users', icon: User },
+  { href: '/admin/draws', label: 'Draws', icon: Trophy },
+  { href: '/admin/charities', label: 'Charities', icon: Heart },
 ]
 
 export function Navbar() {
@@ -100,18 +108,10 @@ export function Navbar() {
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
-              {user.role === 'admin' && (
-                <Link href="/admin">
-                  <Button variant="ghost" size="sm">
-                    <Shield className="h-4 w-4" />
-                    Admin
-                  </Button>
-                </Link>
-              )}
-              <Link href="/dashboard">
+              <Link href={getHomeRouteForRole(user.role === 'admin' ? 'admin' : 'subscriber')}>
                 <Button variant="secondary" size="sm">
-                  <LayoutDashboard className="h-4 w-4" />
-                  Dashboard
+                  {user.role === 'admin' ? <Shield className="h-4 w-4" /> : <LayoutDashboard className="h-4 w-4" />}
+                  {user.role === 'admin' ? 'Admin Dashboard' : 'Dashboard'}
                 </Button>
               </Link>
               <button
@@ -128,6 +128,9 @@ export function Navbar() {
               </Link>
               <Link href="/auth/signup">
                 <Button variant="primary" size="sm">Get Started</Button>
+              </Link>
+              <Link href="/auth/admin/login">
+                <Button variant="ghost" size="sm">Admin Sign In</Button>
               </Link>
             </>
           )}
@@ -169,7 +172,7 @@ export function Navbar() {
               <hr className="border-white/[0.06] my-2" />
               {user ? (
                 <>
-                  {userLinks.map((link) => (
+                  {(user.role === 'admin' ? adminLinks : userLinks).map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
@@ -193,12 +196,15 @@ export function Navbar() {
                   </button>
                 </>
               ) : (
-                <div className="flex gap-2 pt-2">
-                  <Link href="/auth/login" className="flex-1" onClick={() => setMobileOpen(false)}>
+                <div className="grid gap-2 pt-2">
+                  <Link href="/auth/login" onClick={() => setMobileOpen(false)}>
                     <Button variant="secondary" size="sm" fullWidth>Sign In</Button>
                   </Link>
-                  <Link href="/auth/signup" className="flex-1" onClick={() => setMobileOpen(false)}>
+                  <Link href="/auth/signup" onClick={() => setMobileOpen(false)}>
                     <Button variant="primary" size="sm" fullWidth>Get Started</Button>
+                  </Link>
+                  <Link href="/auth/admin/login" onClick={() => setMobileOpen(false)}>
+                    <Button variant="ghost" size="sm" fullWidth>Admin Sign In</Button>
                   </Link>
                 </div>
               )}
